@@ -1,0 +1,6 @@
+config:
+  aws:region: ap-south-1
+  ai-gateway:container_cpu: "256"
+  ai-gateway:container_memory: "512"
+  ai-gateway:desired_count: "1"
+  ai-gateway:instance_type: t3.micro
