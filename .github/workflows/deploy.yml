@@ -40,8 +40,8 @@ jobs:
       - name: Run Checkov IaC scan
         uses: bridgecrewio/checkov-action@v12
         with:
-          directory: infra
-          framework: python
+          directory: .
+          framework: dockerfile,sast_python
           quiet: true
           soft_fail: true
           output_format: cli
