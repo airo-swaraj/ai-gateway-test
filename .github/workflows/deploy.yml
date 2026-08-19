@@ -42,7 +42,7 @@ jobs:
         with:
           directory: .
           framework: dockerfile,sast_python,secrets,github_actions
-          quiet: true
+          quiet: false
           soft_fail: true
           output_format: cli
 
