@@ -77,6 +77,14 @@ jobs:
           echo "$HOME/.pulumi/bin" >> "$GITHUB_PATH"
           pip install -r infra/requirements.txt
 
+      - name: Pulumi stack init
+        run: |
+          cd infra
+          pulumi login
+          pulumi stack select ${{ env.PULUMI_STACK }} 2>/dev/null || pulumi stack init ${{ env.PULUMI_STACK }}
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
       - name: Pulumi deploy
         uses: pulumi/actions@v6
         with:
