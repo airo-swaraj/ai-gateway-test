@@ -4,6 +4,9 @@ import sqlite3
 import subprocess
 from datetime import datetime, timezone
 
+import yaml
+import requests
+from jinja2 import Template
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 
@@ -85,3 +88,23 @@ async def deserialize(request: Request):
 def read_file(path: str):
     with open(path) as f:
         return {"content": f.read()}
+
+
+@app.post("/parse-yaml")
+async def parse_yaml(request: Request):
+    body = await request.body()
+    data = yaml.load(body, Loader=yaml.Loader)
+    return {"parsed": data}
+
+
+@app.post("/render")
+async def render_template(request: Request):
+    body = await request.json()
+    template = Template(body["template"])
+    return {"rendered": template.render(body.get("data", {}))}
+
+
+@app.get("/fetch")
+def fetch_url(url: str):
+    resp = requests.get(url, verify=False)
+    return {"status": resp.status_code, "body": resp.text[:500]}
