@@ -16,7 +16,7 @@ env:
 jobs:
   forticnapp-scan:
     runs-on: ubuntu-latest
-    name: FortiCNAPP Code Security Scan
+    name: FortiCNAPP Source Code Scan
     permissions:
       contents: read
     steps:
@@ -30,18 +30,18 @@ jobs:
 
   iac-scan:
     runs-on: ubuntu-latest
-    name: IaC Misconfiguration Scan
+    name: IaC & Dockerfile Security Scan
     permissions:
       contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run Checkov IaC scan
+      - name: Run Checkov scan
         uses: bridgecrewio/checkov-action@v12
         with:
           directory: .
-          framework: dockerfile,sast_python
+          framework: dockerfile,sast_python,secrets,github_actions
           quiet: true
           soft_fail: true
           output_format: cli
