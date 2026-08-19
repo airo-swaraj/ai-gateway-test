@@ -41,7 +41,7 @@ jobs:
         uses: bridgecrewio/checkov-action@v12
         with:
           directory: .
-          framework: dockerfile,sast_python,secrets,github_actions
+          framework: terraform,dockerfile,sast_python,secrets,github_actions,sca_package
           quiet: false
           soft_fail: true
           output_format: cli

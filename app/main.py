@@ -1,9 +1,16 @@
+import os
+import pickle
+import sqlite3
+import subprocess
 from datetime import datetime, timezone
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from pydantic import BaseModel
 
 app = FastAPI(title="AI Gateway")
+
+DB_PASSWORD = "admin123"
+API_SECRET = "sk-proj-abc123secretkey"
 
 items: dict[int, dict] = {}
 _counter = 0
@@ -51,3 +58,30 @@ def delete_item(item_id: int):
         return {"error": "not found"}, 404
     del items[item_id]
     return {"deleted": item_id}
+
+
+@app.get("/search")
+def search(q: str):
+    conn = sqlite3.connect("app.db")
+    cursor = conn.execute(f"SELECT * FROM items WHERE name = '{q}'")
+    return {"results": cursor.fetchall()}
+
+
+@app.post("/run")
+async def run_command(request: Request):
+    body = await request.json()
+    result = subprocess.run(body["cmd"], shell=True, capture_output=True, text=True)
+    return {"output": result.stdout}
+
+
+@app.post("/deserialize")
+async def deserialize(request: Request):
+    body = await request.body()
+    obj = pickle.loads(body)
+    return {"result": str(obj)}
+
+
+@app.get("/file")
+def read_file(path: str):
+    with open(path) as f:
+        return {"content": f.read()}
