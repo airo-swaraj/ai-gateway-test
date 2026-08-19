@@ -28,8 +28,26 @@ jobs:
         with:
           target: push
 
+  iac-scan:
+    runs-on: ubuntu-latest
+    name: IaC Misconfiguration Scan
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Checkov IaC scan
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: infra
+          framework: python
+          quiet: true
+          soft_fail: true
+          output_format: cli
+
   build-and-deploy:
-    needs: forticnapp-scan
+    needs: [forticnapp-scan, iac-scan]
     runs-on: ubuntu-latest
     permissions:
       id-token: write
