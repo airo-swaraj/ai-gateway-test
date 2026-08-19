@@ -9,3 +9,5 @@ dist/
 build/
 infra/venv/
 .pulumi/
+*.json
+*.csv
