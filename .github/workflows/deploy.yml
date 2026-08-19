@@ -82,6 +82,7 @@ jobs:
           cd infra
           pulumi login
           pulumi stack select ${{ env.PULUMI_STACK }} 2>/dev/null || pulumi stack init ${{ env.PULUMI_STACK }}
+          pulumi cancel --yes 2>/dev/null || true
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 

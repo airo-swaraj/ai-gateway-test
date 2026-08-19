@@ -14,6 +14,10 @@ instance_type = config.get("instance_type") or "t3.micro"
 app_name = "ai-gateway"
 docker_image = os.environ.get("DOCKER_IMAGE", f"{app_name}:latest")
 
+caller = aws.get_caller_identity()
+region = aws.get_region()
+ecr_repo_url = f"{caller.account_id}.dkr.ecr.{region.name}.amazonaws.com/{app_name}"
+
 # --- VPC ---
 vpc = awsx.ec2.Vpc(
     f"{app_name}-vpc",
@@ -21,14 +25,6 @@ vpc = awsx.ec2.Vpc(
         number_of_availability_zones=2,
         nat_gateways=awsx.ec2.NatGatewayConfigurationArgs(strategy=awsx.ec2.NatGatewayStrategy.SINGLE),
     ),
-)
-
-# --- ECR Repository ---
-ecr_repo = aws.ecr.Repository(
-    f"{app_name}-repo",
-    name=app_name,
-    image_tag_mutability="MUTABLE",
-    force_delete=True,
 )
 
 # --- Security Group ---
@@ -219,5 +215,5 @@ service = aws.ecs.Service(
 # --- Exports ---
 pulumi.export("cluster_name", cluster.name)
 pulumi.export("service_name", service.name)
-pulumi.export("ecr_repo_url", ecr_repo.repository_url)
+pulumi.export("ecr_repo_url", ecr_repo_url)
 pulumi.export("vpc_id", vpc.vpc_id)
