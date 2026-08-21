@@ -1,0 +1,71 @@
+name: Manage Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Create or destroy the ECS infrastructure"
+        required: true
+        type: choice
+        options:
+          - deploy
+          - destroy
+
+env:
+  AWS_REGION: ap-south-1
+  APP_NAME: ai-gateway
+  PULUMI_STACK: dev
+
+jobs:
+  manage-infra:
+    runs-on: ubuntu-latest
+    name: "${{ inputs.action }} infrastructure"
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Pulumi and dependencies
+        run: |
+          curl -fsSL https://get.pulumi.com | sh
+          echo "$HOME/.pulumi/bin" >> "$GITHUB_PATH"
+          pip install -r infra/requirements.txt
+
+      - name: Pulumi stack init
+        run: |
+          cd infra
+          pulumi login
+          pulumi stack select ${{ env.PULUMI_STACK }} 2>/dev/null || pulumi stack init ${{ env.PULUMI_STACK }}
+          pulumi cancel --yes 2>/dev/null || true
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
+      - name: Pulumi ${{ inputs.action }}
+        uses: pulumi/actions@v6
+        with:
+          command: ${{ inputs.action == 'deploy' && 'up' || 'destroy' }}
+          stack-name: ${{ env.PULUMI_STACK }}
+          work-dir: infra
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          DOCKER_IMAGE: ${{ env.APP_NAME }}:latest
+
+      - name: Clean up ECR repository
+        if: inputs.action == 'destroy'
+        run: |
+          aws ecr delete-repository --repository-name $APP_NAME --force 2>/dev/null || true
